@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<!-- saved from url=(0049)http://depts.washington.edu/aimgroup/proj/dollar/ -->
+<html xmlns="http://www.w3.org/1999/xhtml" class="gr__depts_washington_edu"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<title>$1 Recognizer</title>
+	<link href="./$1 Recognizer_files/styles.css" rel="stylesheet" type="text/css">
+	<!--[if IE]><script src="excanvas.js"></script><![endif]-->
+	<script type="text/javascript" src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+	<script type="text/javascript" src="./$1 Recognizer_files/canvas.text.js"></script>
+	<script type="text/javascript" src="./$1 Recognizer_files/gentilis-normal-normal.js"></script>
+	<script type="text/javascript" src="./$1 Recognizer_files/dollar.js"></script>
+	<script type="text/javascript"><!--
+	    //
+		// Startup
+		//
+		var _isDown, _points, _r, _g, _rc;
+		function onLoadEvent()
+		{
+			_points = new Array();
+			_r = new DollarRecognizer();
+
+			var canvas = document.getElementById('myCanvas');
+			_g = canvas.getContext('2d');
+			_g.fillStyle = "rgb(0,0,225)";
+			_g.strokeStyle = "rgb(0,0,225)";
+			_g.lineWidth = 3;
+			_g.font = "16px Gentilis";
+			_rc = getCanvasRect(canvas); // canvas rect on page
+			_g.fillStyle = "rgb(255,255,136)";
+			_g.fillRect(0, 0, _rc.width, 20);
+
+			_isDown = false;
+		}
+		function getCanvasRect(canvas)
+		{
+			var w = canvas.width;
+			var h = canvas.height;
+
+			var cx = canvas.offsetLeft;
+			var cy = canvas.offsetTop;
+			while (canvas.offsetParent != null)
+			{
+				canvas = canvas.offsetParent;
+				cx += canvas.offsetLeft;
+				cy += canvas.offsetTop;
+			}
+			return {x: cx, y: cy, width: w, height: h};
+		}
+		function getScrollY()
+		{
+			var scrollY = 0;
+			if (typeof(document.body.parentElement) != 'undefined')
+			{
+				scrollY = document.body.parentElement.scrollTop; // IE
+			}
+			else if (typeof(window.pageYOffset) != 'undefined')
+			{
+				scrollY = window.pageYOffset; // FF
+			}
+			return scrollY;
+		}
+		//
+		// Mouse Events
+		//
+
+		//// Radian
+		var counter = 0 ;
+
+
+
+		function mouseDownEvent(x, y)
+		{
+			counter = 0 ;
+			document.onselectstart = function() { return false; } // disable drag-select
+			document.onmousedown = function() { return false; } // disable drag-select
+			_isDown = true;
+			x -= _rc.x;
+			y -= _rc.y - getScrollY();
+			if (_points.length > 0)
+				_g.clearRect(0, 0, _rc.width, _rc.height);
+			_points.length = 1; // clear
+			_points[0] = new Point(x, y);
+
+			drawText("Recording unistroke...");
+			_g.fillRect(x - 4, y - 3, 9, 9);
+		}
+		function mouseMoveEvent(x, y)
+		{
+			counter++ ;
+			if (_isDown && counter % $('input[name="rate"]:checked').val() === 0)
+			{
+				x -= _rc.x;
+				y -= _rc.y - getScrollY();
+				_points[_points.length] = new Point(x, y); // append
+
+				drawConnectedPoint(_points.length - 2, _points.length - 1);
+			}
+		}
+		function mouseUpEvent(x, y)
+		{
+			document.onselectstart = function() { return true; } // enable drag-select
+			document.onmousedown = function() { return true; } // enable drag-select
+			if (_isDown)
+			{
+				_isDown = false;
+				if (_points.length >= 10)
+				{
+					// for (var i = 0 , str ="" ; i < _points.length ; i++)
+					// 	str+= "new Point("+Math.floor(_points[i].X)+","+Math.floor(_points[i].Y)+"),"
+					// console.log(str);
+					var result = _r.Recognize(_points, document.getElementById('useProtractor').checked);
+					drawText("Result: " + result.Name + " (" + round(result.Score,2) + ").");
+				}
+				else // fewer than 10 points were inputted
+				{
+					drawText("Too few points made. Please try again.");
+				}
+			}
+		}
+		function drawText(str)
+		{
+			_g.fillStyle = "rgb(255,255,136)";
+			_g.fillRect(0, 0, _rc.width, 20);
+			_g.fillStyle = "rgb(0,0,255)";
+			_g.fillText(str, 1, 14);
+		}
+		function drawConnectedPoint(from, to)
+		{
+			_g.beginPath();
+			// _g.moveTo(_points[from].X, _points[from].Y);
+
+			_g.arc(_points[from].X,_points[from].Y,5,0,2*Math.PI);
+			_g.fillStyle = "blue";
+			_g.fill();
+			// _g.arc(_points[from].X,_points[from].Y,20,0,2*Math.PI);
+
+			// _g.lineTo(_points[to].X, _points[to].Y);
+			_g.closePath();
+			_g.stroke();
+		}
+		function round(n, d) // round 'n' to 'd' decimals
+		{
+			d = Math.pow(10, d);
+			return Math.round(n * d) / d
+		}
+		//
+		// Unistroke Adding and Clearing
+		//
+		function onClickAddExisting()
+		{
+			if (_points.length >= 10)
+			{
+				var unistrokes = document.getElementById('unistrokes');
+				var name = unistrokes[unistrokes.selectedIndex].value;
+				var num = _r.AddGesture(name, _points);
+				drawText("\"" + name + "\" added. Number of \"" + name + "\"s defined: " + num + ".");
+			}
+		}
+		function onClickAddCustom()
+		{
+			var name = document.getElementById('custom').value;
+			if (_points.length >= 10 && name.length > 0)
+			{
+				var num = _r.AddGesture(name, _points);
+				drawText("\"" + name + "\" added. Number of \"" + name + "\"s defined: " + num + ".");
+			}
+		}
+		function onClickCustom()
+		{
+			document.getElementById('custom').select();
+		}
+		function onClickDelete()
+		{
+			var num = _r.DeleteUserGestures(); // deletes any user-defined unistrokes
+			alert("All user-defined gestures have been deleted. Only the 1 predefined gesture remains for each of the " + num + " types.");
+		}
+	// -->
+	</script>
+<style id="style-1-cropbar-clipper">/* Copyright 2014 Evernote Corporation. All rights reserved. */
+.hidden {
+	display: none ;
+}
+.en-markup-crop-options {
+    top: 18px !important;
+    left: 50% !important;
+    margin-left: -100px !important;
+    width: 200px !important;
+    border: 2px rgba(255,255,255,.38) solid !important;
+    border-radius: 4px !important;
+}
+
+.en-markup-crop-options div div:first-of-type {
+    margin-left: 0px !important;
+}
+</style></head>
+<body onload="onLoadEvent()">
+
+	<div id="Content">
+		<!-- <p class="subhead">Download</p>
+		<p>$1 source code: <a href="./$1 Recognizer_files/dollar.js">JavaScript</a>, <a href="http://depts.washington.edu/aimgroup/proj/dollar/dollar.zip">C#</a><br>
+		   Dynamic time warping: <a href="http://depts.washington.edu/aimgroup/proj/dollar/dtw.zip">C#</a><br>
+		   Rubine classifier: <a href="http://depts.washington.edu/aimgroup/proj/dollar/rubine.zip">C#</a><br>
+		   Pseudocode: <a href="http://depts.washington.edu/aimgroup/proj/dollar/dollar.pdf">$1</a>, <a href="http://depts.washington.edu/aimgroup/proj/dollar/protractor.pdf">Protractor</a><br>
+		   Unistroke gesture logs: <a href="http://depts.washington.edu/aimgroup/proj/dollar/xml.zip">XML</a><br>
+		   Paper: <a href="http://faculty.washington.edu/wobbrock/pubs/uist-07.01.pdf">PDF</a>
+		</p>
+		<p>This software is distributed under the <a href="http://en.wikipedia.org/wiki/BSD_licenses#3-clause_license_.28.22Revised_BSD_License.22.2C_.22New_BSD_License.22.2C_or_.22Modified_BSD_License.22.29">New BSD License</a> agreement.</p>
+
+		<p class="subhead">About</p>
+		<p>
+			The $1 Unistroke Recognizer is a 2-D single-stroke recognizer designed for rapid prototyping of gesture-based
+			user interfaces. In machine learning terms, $1 is an instance-based nearest-neighbor classifier with a Euclidean
+			scoring function, i.e., a geometric template matcher. $1 is an extension of the proportional shape matching
+			approach used in <a href="http://dl.acm.org/citation.cfm?id=1029640">SHARK<sup>2</sup></a>, which itself is
+			an adaptation of <a href="http://dl.acm.org/citation.cfm?id=1664979">Tappert's elastic matching</a> approach
+			with zero look-ahead. Despite its simplicity, $1 requires very few templates to perform well and is only about
+			100 lines of code, making it easy to deploy.
+			An optional enhancement called <a href="http://dl.acm.org/citation.cfm?id=1753654">Protractor</a> improves $1's speed.
+			The <a href="http://depts.washington.edu/aimgroup/proj/dollar/ndollar.html">$N Multistroke Recognizer</a> extends $1 to gestures with multiple strokes.
+			The <a href="http://depts.washington.edu/aimgroup/proj/dollar/pdollar.html">$P Point-Cloud Recognizer</a> is the latest in the dollar family,
+			performing unistroke and multistroke recognition without the combinatoric overhead of $N.
+		</p> -->
+
+		<p class="subhead">Demo</p>
+		<p>
+			請使用 Firfox 開啟，並請直接在右下方的灰色區塊內做文字辨識。本系統可以辨識 0 - 9 的數字。(1不知道什麼因素，辨識度比較差。)
+			<img style="display:block; float : right;" src="./$1 Recognizer_files/unistrokes.jpg">
+			<ul>
+				<li>如果遇到偵測錯誤的，請使用下方加入範例，修正圖庫。</li>
+				<li>請選擇採樣速度</li>
+				<form style="font-size:10pt">
+					<input  type="radio" name="rate" value="1" checked="" >
+						<span style="font-weight:bold">非常快  (滑鼠每動1次，取樣一次)</span>
+					<br>
+					<input type="radio" name="rate" value="2">
+						<span style="font-weight:bold">普通  (滑鼠每動2次，取樣一次)</span>
+						<br>
+					<input type="radio" name="rate" value="4">
+						<span style="font-weight:bold">慢  (滑鼠每動4次，取樣一次)</span>
+				</form>
+			</ul>
+			<!-- Gesture image and canvas -->
+			</p><table border="0" cellspacing="10">
+				<tbody><tr>
+					<td class="hidden" valign="top">
+						<br>
+						<p>
+							</p><form class="hidden" style="font-size:10pt">
+								<input  type="radio" name="search" id="useGSS" checked="">
+									<span style="font-weight:bold">Use Golden Section Search <i>(original)</i></span>
+								<br>
+								<input type="radio" name="search" id="useProtractor">
+									<span style="font-weight:bold">Use Protractor <i>(faster)</i></span>
+
+							</form>
+
+						<p></p>
+					</td>
+					<td valign="top" align="left">
+						<!-- <p style="margin-bottom:4pt;font-size:10pt"><i>Make strokes on this canvas. If a misrecognition occurs,
+						add the misrecognized unistroke as an example of the intended gesture.</i>
+						</p> -->
+
+						<canvas id="myCanvas" width="800" height="400" style="background-color:#dddddd" onmousedown="mouseDownEvent(event.clientX, event.clientY)" onmousemove="mouseMoveEvent(event.clientX, event.clientY)" onmouseup="mouseUpEvent(event.clientX, event.clientY)" oncontextmenu="return false;">
+							<span style="background-color:#ffff88;">The &lt;canvas&gt; element is not supported by this browser.</span>
+						</canvas>
+
+						<!-- Editing area below stroking canvas area -->
+						<table class="hiddenn" border="0" width="420" style="font-size:10pt">
+							<tbody><tr>
+								<td valign="top" align="left">我要將這次的軌跡加入</td>
+								<td valign="top" align="center">
+									<select id="unistrokes"  onkeypress="if (event.keyCode == 13) onClickAddExisting()">
+										<option selected="" value="0">0</option>
+										<option value="1">1</option>
+										<option value="2">2</option>
+										<option value="3">3</option>
+										<option value="4">4</option>
+										<option value="5">5</option>
+										<option value="6">6</option>
+										<option value="7">7</option>
+										<option value="8">8</option>
+										<option value="9">9</option>
+									</select>
+								</td>
+								<td valign="top" align="left">的樣板</td>
+								<td valign="top" align="right"><input type="button" style="width:64px" value="   加入   " onclick="onClickAddExisting()"></td>
+							</tr>
+							<!-- <tr>
+								<td valign="top" align="left">Add as example of custom type:</td>
+								<td valign="top" align="right"><input type="text" id="custom" style="width:130px" value="Type name here..." onclick="onClickCustom()" onkeypress="if (event.keyCode == 13) onClickAddCustom()"></td>
+								<td valign="top" align="right"><input type="button" style="width:64px" value="  Add   " onclick="onClickAddCustom()"></td>
+							</tr> -->
+							<!-- <tr>
+								<td valign="top" align="left">Delete all user-defined gestures:</td>
+								<td valign="top" align="right">&nbsp;</td>
+								<td valign="top" align="right"><input type="button" style="width:64px" value="Delete" onclick="onClickDelete()"></td>
+							</tr> -->
+						</tbody></table>
+						<!-- End of editing area below stroking canvas area -->
+					</td>
+				</tr>
+			</tbody></table>
+		<p></p>
+	</div>
+
+</body><span class="gr__tooltip"><span class="gr__tooltip-content"></span><i class="gr__tooltip-logo"></i><span class="gr__triangle"></span></span></html>
