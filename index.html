@@ -178,7 +178,9 @@
 	</script>
 <style id="style-1-cropbar-clipper">/* Copyright 2014 Evernote Corporation. All rights reserved. */
 .hidden {
-	display: none ;
+	display: none !important ;
+
+	visibility:hidden;
 }
 .en-markup-crop-options {
     top: 18px !important;
@@ -223,7 +225,7 @@
 
 		<p class="subhead">Demo</p>
 		<p>
-			請使用 Firfox 開啟，並請直接在右下方的灰色區塊內做文字辨識。本系統可以辨識 0 - 9 的數字。(1不知道什麼因素，辨識度比較差。)
+			請使用 <span style="color:red;">Firefox</span> 開啟，並請直接在右下方的灰色區塊內做文字辨識。本系統可以辨識 0 - 9 的數字。(1不知道什麼因素，辨識度比較差。)
 			<img style="display:block; float : right;" src="./$1 Recognizer_files/unistrokes.jpg">
 			<ul>
 				<li>如果遇到偵測錯誤的，請使用下方加入範例，修正圖庫。</li>
@@ -240,15 +242,19 @@
 				</form>
 			</ul>
 			<!-- Gesture image and canvas -->
-			<form class="hidden" style="font-size:10pt">
-				<input  type="radio" name="search" id="useGSS" checked="">
-					<span style="font-weight:bold">Use Golden Section Search <i>(original)</i></span>
-				<br>
-				<input type="radio" name="search" id="useProtractor">
-					<span style="font-weight:bold">Use Protractor <i>(faster)</i></span>
+			<div class="hidden">
 
-			</form>
-			</p><table class="hidden" border="0" cellspacing="10">
+
+				<form class="hidden" style="font-size:10pt">
+					<input  type="radio" name="search" id="useGSS" checked="">
+						<span style="font-weight:bold">Use Golden Section Search <i>(original)</i></span>
+					<br>
+					<input type="radio" name="search" id="useProtractor">
+						<span style="font-weight:bold">Use Protractor <i>(faster)</i></span>
+
+				</form>
+			</div>
+			</p><table  border="0" cellspacing="10">
 				<tbody><tr>
 					<!-- <td class="hidden" valign="top">
 						<br>
