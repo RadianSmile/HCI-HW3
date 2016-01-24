@@ -240,22 +240,23 @@
 				</form>
 			</ul>
 			<!-- Gesture image and canvas -->
-			</p><table border="0" cellspacing="10">
+			<form class="hidden" style="font-size:10pt">
+				<input  type="radio" name="search" id="useGSS" checked="">
+					<span style="font-weight:bold">Use Golden Section Search <i>(original)</i></span>
+				<br>
+				<input type="radio" name="search" id="useProtractor">
+					<span style="font-weight:bold">Use Protractor <i>(faster)</i></span>
+
+			</form>
+			</p><table class="hidden" border="0" cellspacing="10">
 				<tbody><tr>
-					<td class="hidden" valign="top">
+					<!-- <td class="hidden" valign="top">
 						<br>
 						<p>
-							</p><form class="hidden" style="font-size:10pt">
-								<input  type="radio" name="search" id="useGSS" checked="">
-									<span style="font-weight:bold">Use Golden Section Search <i>(original)</i></span>
-								<br>
-								<input type="radio" name="search" id="useProtractor">
-									<span style="font-weight:bold">Use Protractor <i>(faster)</i></span>
-
-							</form>
+							</p>
 
 						<p></p>
-					</td>
+					</td> -->
 					<td valign="top" align="left">
 						<!-- <p style="margin-bottom:4pt;font-size:10pt"><i>Make strokes on this canvas. If a misrecognition occurs,
 						add the misrecognized unistroke as an example of the intended gesture.</i>
@@ -266,7 +267,7 @@
 						</canvas>
 
 						<!-- Editing area below stroking canvas area -->
-						<table class="hiddenn" border="0" width="420" style="font-size:10pt">
+						<table border="0" width="420" style="font-size:10pt">
 							<tbody><tr>
 								<td valign="top" align="left">我要將這次的軌跡加入</td>
 								<td valign="top" align="center">
